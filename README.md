@@ -1,1 +1,2 @@
 # DiplomaAgents
+БАХА НЕ читай	
