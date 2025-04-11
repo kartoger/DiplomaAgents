@@ -1,44 +1,91 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <regex>
+#include <unistd.h>
+#include <sys/inotify.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <pwd.h>
 
-std::string getMacAddress() {
-    std::ifstream macFile("/sys/class/net/enp0s3/address");
-    if (!macFile.is_open()) {
-        std::cerr << "Не удалось открыть файл MAC-адреса!" << std::endl;
-        return "unknown";
-    }
-    std::string mac;
-    std::getline(macFile, mac);
-    macFile.close();
-    return mac;
+#define EVENT_SIZE  (sizeof(struct inotify_event))
+#define EVENT_BUF_LEN (1024 * (EVENT_SIZE + 16))
+
+std::string getUsername(uid_t uid) {
+    struct passwd *pw = getpwuid(uid);
+    if (pw) return std::string(pw->pw_name);
+    return "unknown";
 }
 
-std::string getTime(std::string& line) {
-    // Регулярка для времени (в начале строки)
-    std::regex timeRegex(R"(^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}))");
-    std::smatch timematch;
-    if (std::regex_search(line, timematch, timeRegex)) {
-        return timematch[1];
+void watchCriticalFolders(const std::string& path) {
+    int fd = inotify_init();
+    if (fd < 0) {
+        perror("inotify_init");
+        return;
     }
-    else {
-        return "unknown";
+
+    int wd = inotify_add_watch(fd, path.c_str(), IN_DELETE | IN_DELETE_SELF);
+    if (wd == -1) {
+        std::cerr << "Не удалось следить за: " << path << std::endl;
+        return;
+    } else {
+        std::cout << "Следим за: " << path << std::endl;
     }
-}
-std::string getUser(std::string& line) {
-   std::regex re_invalid(R"(Failed password for (\w+))");
-    std::smatch usermatch;
-        if (std::regex_search(line, usermatch, re_invalid)){
-            return usermatch[1];
-        } else {
-            return "unknown";
+
+    char buffer[EVENT_BUF_LEN];
+    while (true) {
+        int length = read(fd, buffer, EVENT_BUF_LEN);
+        if (length < 0) {
+            perror("read");
         }
+
+        int i = 0;
+        while (i < length) {
+            struct inotify_event *event = (struct inotify_event *) &buffer[i];
+            if (event->mask & IN_DELETE) {
+                std::cout << "Обнаружено удаление файла: " << event->name << " в " << path << std::endl;
+
+                uid_t uid = geteuid(); // Кто запустил процесс
+                std::string user = getUsername(uid);
+
+                // Логируем
+                std::ofstream logfile("critical_delete.log", std::ios::app);
+                logfile << "Пользователь: " << user << " удалил " << event->name << " в " << path << std::endl;
+                logfile.close();
+            }
+            i += EVENT_SIZE + event->len;
+        }
+    }
+
+    inotify_rm_watch(fd, wd);
+    close(fd);
 }
+
 int main() {
-    std::string log="2025-04-10T11:48:42.523029+05:00 kartoger-VirtualBox sshd[9918]: Failed password for BAdsa_ds2 from 10.59.68.24 port 59840 ssh2";
-    std::string Mac = getMacAddress();
-    std::string user = getUser(log);
-    std::string time = getTime(log);
-    std::cout <<"Time: " << time << ", Mac: " << Mac << ", User: " << user << std::endl;
+    std::string paths[] = {"/etc", "/bin", "/sbin", "/usr"};
+
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("fork");
+        return 1;
+    } else if (pid > 0) {
+        // Родитель завершает работу
+        return 0;
+    } else {
+        // Дочерний процесс становится демоном
+        setsid();
+        chdir("/");
+        umask(0);
+
+        for (const auto& path : paths) {
+            if (fork() == 0) {
+                watchCriticalFolders(path);
+                exit(0);
+            }
+        }
+        while (true) {
+            sleep(60);
+        }
+    }
+
+    return 0;
 }
