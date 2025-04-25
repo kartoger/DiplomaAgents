@@ -23,6 +23,13 @@ Apr 24 14:17:19  [DELETE]: /home/kartoger/DiplomaAgents/delete/hell.txt [DELETE]
 `[timestamp] [mac] [event] [user] [details]`
 - `[timestamp]` - Временная метка события в формате ISO 8601 (например, 2025-04-24T14:17:19Z).
 - `[mac]` - MAC-адрес устройства, на котором произошло событие.
-- `[event]` - Тип события (например, file::delete).
+- `[event]` - Тип события (например, file::delete). Сначала пишется название службы, затем два двоеточия и тип события.
+Возможные значения:
+  - gdm-password::sucess
+  - gdm-password::failed
+  - sshd::sucess
+  - sshd::failed
+  - file::delete
+  - file::modify
 - `[user]` - Имя пользователя, связанное с событием (например, kartoger).
 - `[details]` - Дополнительные сведения о событии, такие как путь к файлу или IP-адрес (например, /home/kartoger/DiplomaAgents/delete/hell.txt).
