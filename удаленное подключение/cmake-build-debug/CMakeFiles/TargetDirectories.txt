@@ -1,0 +1,3 @@
+C:/Users/user/CLionProjects/удаленное подключение/cmake-build-debug/CMakeFiles/_.dir
+C:/Users/user/CLionProjects/удаленное подключение/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/user/CLionProjects/удаленное подключение/cmake-build-debug/CMakeFiles/rebuild_cache.dir
