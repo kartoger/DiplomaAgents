@@ -69,14 +69,14 @@ void detectPortScanning(const std::unordered_map<std::string, std::vector<int>>&
         const std::vector<int>& ports = entry.second;
 
         if (ports.size() >= 5) { // если IP подключается к >= 5 портам
-            std::cout << "🚨 Внешний IP-адрес сканирует порты: " << ip
+            std::cout << "Внешний IP-адрес сканирует порты: " << ip
                       << " (попыток: " << ports.size() << ")\n";
         }
     }
 }
 
 int main() {
-    std::cout << "🛡 Мониторинг внешнего сканирования портов...\n";
+    std::cout << "Мониторинг внешнего сканирования портов...\n";
 
     while (true) {
         std::unordered_map<std::string, std::vector<int>> ipPorts;
