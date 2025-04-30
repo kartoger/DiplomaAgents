@@ -20,11 +20,24 @@ std::string hexToIp(const std::string& hex) {
     return std::string(inet_ntoa(addr));
 }
 
-// Анализ входящих соединений
+// Проверка: является ли IP адрес внутренним
+bool isPrivateIP(const std::string& ip) {
+    struct in_addr addr;
+    inet_aton(ip.c_str(), &addr);
+    uint32_t ipnum = ntohl(addr.s_addr);
+
+    return
+        (ipnum >> 24) == 10 ||                                // 10.0.0.0/8
+        (ipnum >> 20) == (172 << 4 | 1) ||                    // 172.16.0.0/12
+        (ipnum >> 16) == (192 << 8 | 168) ||                  // 192.168.0.0/16
+        ip == "127.0.0.1";                                    // localhost
+}
+
+// Анализ соединений
 void scanConnections(std::unordered_map<std::string, std::vector<int>>& ipPorts) {
     std::ifstream tcpFile("/proc/net/tcp");
     std::string line;
-    getline(tcpFile, line); // заголовок
+    getline(tcpFile, line); // пропустить заголовок
 
     while (getline(tcpFile, line)) {
         std::istringstream iss(line);
@@ -42,6 +55,10 @@ void scanConnections(std::unordered_map<std::string, std::vector<int>>& ipPorts)
         ss >> port;
 
         std::string ipStr = hexToIp(remoteIPHex);
+
+        // Пропускаем внутренние IP-адреса
+        if (isPrivateIP(ipStr)) continue;
+
         ipPorts[ipStr].push_back(port);
     }
 }
@@ -51,21 +68,21 @@ void detectPortScanning(const std::unordered_map<std::string, std::vector<int>>&
         const std::string& ip = entry.first;
         const std::vector<int>& ports = entry.second;
 
-        if (ports.size() >= 10) { // если IP лезет к >10 портам
-            std::cout << "Возможное сканирование портов от IP: " << ip
-                      << " (попытки к " << ports.size() << " портам)" << std::endl;
+        if (ports.size() >= 5) { // если IP подключается к >= 5 портам
+            std::cout << "🚨 Внешний IP-адрес сканирует порты: " << ip
+                      << " (попыток: " << ports.size() << ")\n";
         }
     }
 }
 
 int main() {
-    std::cout << "🛡 Мониторинг порт-сканирования..." << std::endl;
+    std::cout << "🛡 Мониторинг внешнего сканирования портов...\n";
 
     while (true) {
         std::unordered_map<std::string, std::vector<int>> ipPorts;
         scanConnections(ipPorts);
         detectPortScanning(ipPorts);
-        sleep(3); // задержка между циклами
+        sleep(3); // периодичность проверки
     }
 
     return 0;
