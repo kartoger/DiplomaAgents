@@ -18,7 +18,7 @@
   - gdm-password::Failed
   - sshd::Success::Password
   - sshd::Success::PublicKey
-  - sshd::Failed				# если введен несуществующий юзер, в таком случае в поле `[user]` будет `[InvalidUser::имя_пользователя]`
+  - sshd::Failed (если введен несуществующий юзер, в таком случае в поле `[user]` будет `[InvalidUser::имя_пользователя]`)
   - file::Delete
   - file::Modify
 - `[user]` - Имя пользователя, связанное с событием (например, kartoger).
