@@ -1,16 +1,5 @@
 # Единый формат логов
 
-### Было
-```
-Apr 24 14:07:49 gdm-password: authentication failure for kartoger
-Apr 24 14:08:10 sshd: Failed password for kartoger from 172.20.10.3
-Apr 24 14:17:08  [MODIFY]: /home/kartoger/DiplomaAgents/delete/hell.txt [MODIFY] by kartoger
-Apr 24 14:17:11  [MODIFY]: /home/kartoger/DiplomaAgents/delete/hell.txt [MODIFY] by kartoger
-Apr 24 14:17:11  [MODIFY]: /home/kartoger/DiplomaAgents/delete/hell.txt [MODIFY] by kartoger
-Apr 24 14:17:12  [MODIFY]: /home/kartoger/DiplomaAgents/delete/hell.txt [MODIFY] by kartoger
-Apr 24 14:17:19  [DELETE]: /home/kartoger/DiplomaAgents/delete/hell.txt [DELETE] by kartoger
-```
-
 ### Пример лога
 ```
 [2025-04-24T14:17:19Z] [AA:BB:CC:DD:EE:FF] [file::delete] [kartoger] [/home/kartoger/DiplomaAgents/delete/hell.txt]
@@ -29,7 +18,7 @@ Apr 24 14:17:19  [DELETE]: /home/kartoger/DiplomaAgents/delete/hell.txt [DELETE]
   - gdm-password::Failed
   - sshd::Success::Password
   - sshd::Success::PublicKey
-  - sshd::Failed
+  - sshd::Failed				# если введен несуществующий юзер, в таком случае в поле `[user]` будет `[InvalidUser::имя_пользователя]`
   - file::Delete
   - file::Modify
 - `[user]` - Имя пользователя, связанное с событием (например, kartoger).
