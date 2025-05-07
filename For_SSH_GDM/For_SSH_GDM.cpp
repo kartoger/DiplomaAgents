@@ -1,12 +1,68 @@
-#include "For_SSH_GDM.h"
+#include <chrono>
+#include <ctime>
+#include <iomanip>
 #include <iostream>
-#include <cstdio>
-#include <string>
+#include <sstream>
 #include <cstring>
+#include <unistd.h>
+#include <ifaddrs.h>
+#include <filesystem>
 #include <fstream>
-#include <cstdint>
+#include <libud/libudev.h> // sudo apt install libudev-dev
+#include <sys/inotify.h>
+
+#include <magic.h> // sudo apt install libmagic-dev
 // Фильтрация событий
 std::string global_typename = "none";
+std::string getTimestamp1() {
+    auto now = std::chrono::system_clock::now();
+    std::time_t t = std::chrono::system_clock::to_time_t(now);
+    std::ostringstream ss;
+    ss << std::put_time(std::gmtime(&t), "%FT%TZ");
+    return ss.str();
+}
+
+// Чтение MAC-адреса из sysfs
+std::string getMacAddress2() {
+    std::ifstream file("/sys/class/net/enp3s0/address");
+    std::string mac;
+    if (file.is_open()) {
+        std::getline(file, mac);
+    } else {
+        mac = "00:00:00:00:00:00";
+    }
+    return mac;
+}
+void write_log_gsa(std::string timestamp = "none",
+                  std::string mac = "none",
+                  std::string event_name = "none" ,
+                  std::string event_type = "none",
+                  std::string username = "",
+                  std::string details = "none") {
+    if (timestamp == "") {
+        timestamp = getTimestamp1();
+    }
+    if (mac == "") {
+        mac = getMacAddress2();
+    }
+    if (username == "") {
+        username = getlogin();
+    }
+    std::cout << "[" << timestamp    << "] "
+              << "[" << mac   << "] "
+              << "[" << event_name << "::" << event_type    << "] "
+              << "[" << username << "] "
+              << "[" << details           << "]\n";
+
+
+
+    // const char* user = getlogin();
+    // std::cout << "[" << timestamp    << "] "
+    //           << "[" << mac   << "] "
+    //           << "[" << event_name         << "] "
+    //           << "[" << (user? user:"unknown") << "] "
+    //           << "[" << details           << "]\n";
+}
 bool filter_event(const std::string& line) {
     if (line.find("\"SYSLOG_IDENTIFIER\":\"gdm-password]\"") != std::string::npos &&
         (line.find("pam_unix(gdm-password:session)") != std::string::npos ||
@@ -158,6 +214,7 @@ void handle_gdm_event(const std::string& line) {
     std::string details = "local GUI login";
     std::string timestamp = extract_time(line);
 
+    write_log_gsa(timestamp,"", "gdm-password", event_type, username, details);
 
     // print_event(timestamp, "gdm-password", event_type, username, details);
 }
