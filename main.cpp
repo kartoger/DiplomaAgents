@@ -15,7 +15,7 @@
 #include "For_all.h"
 #include "For_ScanUsers/For_ScanUsers.h"
 #include <magic.h> // sudo apt install libmagic-dev
-namespace fs = std::filesystem;
+#include "For_FileSystem/FileMonitoring.h"
 
 
 
@@ -36,7 +36,9 @@ int main() {
     // ssh_gdm_monitoring();
 
 
-    write_log("","","app","Start","","Monitoring Active Terminals");
-    get_active_terminals_logs();
+    // write_log("","","app","Start","","Monitoring Active Terminals");
+    // get_active_terminals_logs();
+
+    FileMonitoring();
     return 0;
 }

@@ -19,6 +19,7 @@ add_executable(main main.cpp
         Functions_for_all/For_all.cpp
         For_USB/For_USB.cpp
         For_ScanUsers/For_ScanUsers.cpp
+        For_FileSystem/FileMonitoring.cpp
 )
 
 # Включаем include-директории пакета
@@ -40,13 +41,19 @@ target_link_libraries(main PRIVATE
 )
 
 # Новый таргет для Only-USB
+add_executable(FileSystem
+        Only_FileSystem/Final_fileAccess.cpp
+)
 add_executable(OnlyUSB
         Only_USB/Only-USB.cpp
 )
 add_executable(ScanUsers
         Only_ScanUsers/Only_ScanUsers.cpp
 )
-
+target_compile_options(FileSystem PRIVATE
+        ${LIBUDEV_CFLAGS_OTHER}
+        ${LIBMAGIC_CFLAGS_OTHER}
+)
 target_compile_options(ScanUsers PRIVATE
 ${LIBUDEV_CFLAGS_OTHER}
 ${LIBMAGIC_CFLAGS_OTHER}
