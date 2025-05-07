@@ -306,9 +306,10 @@ void monitorUsbDevices() {
 int main() {
     // 1) Вывести стартовое сообщение
      //write_log("app::Start", "Monitoring USB block devices");
+    write_log("app::Start", "Monitoring mount/unmount via audit");
+
     // 2) Запустить мониторинг
       // monitorUsbDevices();
-    write_log("app::Start", "Monitoring mount/unmount via audit");
     monitorAuditMount();
 
     return 0;
