@@ -1,5 +1,0 @@
-Apr 24 14:17:08  [MODIFY]: /home/kartoger/DiplomaAgents/delete/hell.txt [MODIFY] by kartoger
-Apr 24 14:17:11  [MODIFY]: /home/kartoger/DiplomaAgents/delete/hell.txt [MODIFY] by kartoger
-Apr 24 14:17:11  [MODIFY]: /home/kartoger/DiplomaAgents/delete/hell.txt [MODIFY] by kartoger
-Apr 24 14:17:12  [MODIFY]: /home/kartoger/DiplomaAgents/delete/hell.txt [MODIFY] by kartoger
-Apr 24 14:17:19  [DELETE]: /home/kartoger/DiplomaAgents/delete/hell.txt [DELETE] by kartoger
