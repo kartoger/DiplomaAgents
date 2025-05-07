@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(main)
+project(DiplomaAgents)
 
 set(CMAKE_CXX_STANDARD 20)
 find_package(PkgConfig REQUIRED)
@@ -12,7 +12,10 @@ target_include_directories(main PRIVATE
         ${LIBUDEV_INCLUDE_DIRS}
         ${LIBMAGIC_INCLUDE_DIRS}
 )
-
+# Новый таргет для Only-USB
+add_executable(OnlyUSB
+        USB/Only-USB.cpp
+)
 # Прокидываем дополнительные флаги компилятора (если pkg-config их выдаёт)
 target_compile_options(main PRIVATE
         ${LIBUDEV_CFLAGS_OTHER}
@@ -22,6 +25,20 @@ target_compile_options(main PRIVATE
 
 # Линкуем библиотеки
 target_link_libraries(main PRIVATE
+        ${LIBUDEV_LDFLAGS} ${LIBUDEV_LIBRARIES}
+        ${LIBMAGIC_LDFLAGS} ${LIBMAGIC_LIBRARIES}
+)
+
+
+# Прокидываем дополнительные флаги компилятора (если pkg-config их выдаёт)
+target_compile_options(OnlyUSB PRIVATE
+        ${LIBUDEV_CFLAGS_OTHER}
+        ${LIBMAGIC_CFLAGS_OTHER}
+)
+
+
+# Линкуем библиотеки
+target_link_libraries(OnlyUSB PRIVATE
         ${LIBUDEV_LDFLAGS} ${LIBUDEV_LIBRARIES}
         ${LIBMAGIC_LDFLAGS} ${LIBMAGIC_LIBRARIES}
 )
