@@ -18,6 +18,7 @@ add_executable(main main.cpp
         For_SSH_GDM/For_SSH_GDM.cpp
         Functions_for_all/For_all.cpp
         For_USB/For_USB.cpp
+        For_ScanUsers/For_ScanUsers.cpp
 )
 
 # Включаем include-директории пакета
@@ -41,6 +42,14 @@ target_link_libraries(main PRIVATE
 # Новый таргет для Only-USB
 add_executable(OnlyUSB
         Only_USB/Only-USB.cpp
+)
+add_executable(ScanUsers
+        Only_ScanUsers/Only_ScanUsers.cpp
+)
+
+target_compile_options(ScanUsers PRIVATE
+${LIBUDEV_CFLAGS_OTHER}
+${LIBMAGIC_CFLAGS_OTHER}
 )
 # Прокидываем дополнительные флаги компилятора (если pkg-config их выдаёт)
 target_compile_options(OnlyUSB PRIVATE
