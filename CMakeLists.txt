@@ -5,7 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBUDEV REQUIRED libudev)
 pkg_check_modules(LIBMAGIC REQUIRED libmagic)
-add_executable(main main.cpp)
+add_executable(main main.cpp
+        For_SSH_GDM/For_SSH_GDM.cpp
+        )
 
 # Включаем include-директории пакета
 target_include_directories(main PRIVATE
@@ -26,7 +28,7 @@ target_link_libraries(main PRIVATE
 
 # Новый таргет для Only-USB
 add_executable(OnlyUSB
-        USB/Only-USB.cpp
+        Only_USB/Only-USB.cpp
 )
 # Прокидываем дополнительные флаги компилятора (если pkg-config их выдаёт)
 target_compile_options(OnlyUSB PRIVATE
@@ -42,7 +44,7 @@ target_link_libraries(OnlyUSB PRIVATE
 )
 
 add_executable(ssh_gdm2
-        SSH_GDM/ssh_gdm2.cpp
+        Only_SSH_GDM/ssh_gdm2.cpp
 )
 
 

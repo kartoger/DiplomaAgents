@@ -74,7 +74,7 @@ std::string extract_message(const std::string& line) {
 }
 
 // === Вывод события ===
-void print_event(const std::string& timestamp,
+void write_log(const std::string& timestamp,
                  const std::string& event_name,
                  const std::string& event_type,
                  const std::string& username,
@@ -86,7 +86,7 @@ void print_event(const std::string& timestamp,
               << "[" << mac << "] "
               << "[" << event_name << "::" << event_type << "] "
               << "[" << username << "] "
-              << "[" << details << "]\n\n";
+              << "[" << details << "]\n";
 }
 
 //  Обработка событий от GDM 
@@ -121,11 +121,11 @@ void handle_gdm_event(const std::string& line) {
     std::string message = extract_message(line);
     std::string event_type = determine_gdm_event_type(message);
     std::string username = extract_gdm_username(message, event_type);
-    std::string details = "local GUI login";
+    std::string details = "local GUI logind";
     std::string timestamp = extract_time(line);
 
 
-    print_event(timestamp, "gdm-password", event_type, username, details);
+    write_log(timestamp, "gdm-password", event_type, username, details);
 }
 
 // === Обработка событий от SSHD ===
@@ -191,7 +191,7 @@ void handle_sshd_event(const std::string& line) {
     std::string timestamp = extract_time(line);
     
 
-    print_event(timestamp, "sshd", event_type, username, details);
+    write_log(timestamp, "sshd", event_type, username, details);
 }
 
 // === Главный обработчик событий ===

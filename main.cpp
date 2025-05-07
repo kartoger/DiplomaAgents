@@ -11,8 +11,10 @@
 #include <fstream>
 #include <libud/libudev.h> // sudo apt install libudev-dev
 #include <sys/inotify.h>
+#include "For_SSH_GDM/For_SSH_GDM.h"
 #include <magic.h> // sudo apt install libmagic-dev
 namespace fs = std::filesystem;
+
 // -a always,exit -F arch=b64 -S mount -S umount -k mount_events
 // Получение метки времени в формате ISO8601
 std::string getTimestamp() {
@@ -35,18 +37,40 @@ std::string getMacAddress() {
     return mac;
 }
 
-// Универсальная функция логирования
-void write_log(const std::string& action, const std::string& details) {
-    const char* user = getlogin();
-    std::cout << "[" << getTimestamp()    << "] "
-              << "[" << getMacAddress()   << "] "
-              << "[" << action            << "] "
-              << "[" << (user? user:"unknown") << "] "
+// Универсальная функция вывода логов
+// void write_log(const std::string& action, const std::string& details) {
+
+void write_log(std::string timestamp = "none",
+                  std::string mac = "none",
+                  std::string event_name = "none" ,
+                  std::string event_type = "none",
+                  std::string username = "",
+                  std::string details = "none") {
+    if (timestamp == "") {
+        timestamp = getTimestamp();
+    }
+    if (mac == "") {
+        mac = getMacAddress();
+    }
+    if (username == "") {
+        username = getlogin();
+    }
+    std::cout << "[" << timestamp    << "] "
+              << "[" << mac   << "] "
+              << "[" << event_name << "::" << event_type    << "] "
+              << "[" << username << "] "
               << "[" << details           << "]\n";
+
+
+
+    // const char* user = getlogin();
+    // std::cout << "[" << timestamp    << "] "
+    //           << "[" << mac   << "] "
+    //           << "[" << event_name         << "] "
+    //           << "[" << (user? user:"unknown") << "] "
+    //           << "[" << details           << "]\n";
 }
 
-// Функция-обработчик одного udev-события: проверяет, что это добавление USB-диска,
-// собирает детали и логирует
 
 
 // Вспомогалка: вырезает значение между start и end
@@ -80,6 +104,7 @@ bool isExecutableFile(const fs::path& filePath) {
         return (hasExecBit && (isElf || isScript)); // fallback
     }
 
+
     const char* result = magic_file(magicCookie, filePath.c_str());
     std::string type = result ? result : "";
     magic_close(magicCookie);
@@ -95,7 +120,8 @@ void scanForExecutables(const std::string& path) {
     for (const auto& entry : fs::recursive_directory_iterator(path, fs::directory_options::skip_permission_denied)) {
         if (fs::is_regular_file(entry.path())) {
             if (isExecutableFile(entry.path())) {
-                write_log("device::ExecutableFound", entry.path().string());
+                 // write_log("device::ExecutableFound", entry.path().string());
+                write_log("","","device::","ExecutableFound","",entry.path().string());
             }
         }
     }
@@ -131,6 +157,7 @@ void monitorAuditMount() {
 
     std::string currentEventId;
     std::string action;
+    std::string eventName = "device";
     bool waitingForPath = false;
 
     while (true) {
@@ -185,7 +212,7 @@ void monitorAuditMount() {
                     if (pos == std::string::npos) continue;
 
                     currentEventId = header.substr(pos + 1);
-                    action = (isMount ? "device::Mounted" : "device::Unmounted");
+                    action = (isMount ? "Mounted" : "Unmounted");
                     waitingForPath = true;
                     // std::cout << "[debug] SYSCALL MATCH: " << action << ", eventId=" << currentEventId << "\n";
                     continue;
@@ -201,7 +228,7 @@ void monitorAuditMount() {
                     // std::cout << action << "\n";
 
                     if (!devPath.empty()) {
-                        if (action == "device::Mounted") {
+                        if (action == "Mounted") {
                             if (devPath.find("/dev/") == 0) {
                                 mountSource = devPath;
                             } else {
@@ -210,15 +237,16 @@ void monitorAuditMount() {
 
 
                             if (!mountSource.empty() && !mountTarget.empty()) {
-                                write_log(action, "Source:" + mountSource + " " + "Target:"+mountTarget);
+                                write_log("","",eventName,action,"", "Source:" + mountSource + " " + "Target:"+mountTarget);
                                 waitingForPath = false;
                                 currentEventId.clear();
                                 scanForExecutables(mountTarget);
                                 mountSource.clear();
                                 mountTarget.clear();
                             }
-                        } else if (action == "device::Unmounted") {
-                            write_log(action, "From:"+devPath);
+                        } else if (action == "Unmounted") {
+                            // write_log(action, "From:"+devPath);
+                            write_log("","",eventName,action,"", "From:"+devPath);
                             waitingForPath = false;
                             currentEventId.clear();
                         }
@@ -237,7 +265,7 @@ void monitorAuditMount() {
 
 void handleDeviceEvent(struct udev_device* dev) {
     const char* action = udev_device_get_action(dev);
-    std::string event = "device::";
+    std::string event = "device";
     std::string typevent = "unknown";
     // Проверяем, что родительское устройство — USB
     struct udev_device* usb_dev =
@@ -269,7 +297,8 @@ void handleDeviceEvent(struct udev_device* dev) {
         details << " (VID:PID=" << vid << ":" << pid << ")";
     }
     std::string final_log = event + typevent;
-    write_log(final_log, details.str());
+    // write_log(final_log, details.str());
+    write_log("","",event,typevent,"",details.str());
 }
 
 // Функция-монитор: инициализирует udev, вешает фильтр, входит в бесконечный цикл,
@@ -305,12 +334,15 @@ void monitorUsbDevices() {
 // --- main() теперь сводится только к двум вызовам ---
 int main() {
     // 1) Вывести стартовое сообщение
-     //write_log("app::Start", "Monitoring USB block devices");
-    write_log("app::Start", "Monitoring mount/unmount via audit");
 
+    // write_log("","","app","Start","","Monitoring USB block devices");
+    // monitorUsbDevices();
+    // write_log("","","app","Start","","Monitoring mount/unmount via audit");
+    // monitorAuditMount();
     // 2) Запустить мониторинг
-      // monitorUsbDevices();
-    monitorAuditMount();
 
+
+    write_log("","","app","Start","","Monitoring SSH GDM access");
+    ssh_gdm_monitoring();
     return 0;
 }
