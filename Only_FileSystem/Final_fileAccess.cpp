@@ -13,6 +13,7 @@
 #include <ctime>
 #include <system_error>
 
+
 namespace fs = std::filesystem;
 
 // --- Получение MAC-адреса ---
@@ -318,6 +319,8 @@ if (full_path.find("/etc/") == 0) {
                       << "[" << user << "] "
                       << "[" << full_path << "]"
                       << std::endl;
+
+
 
             i += sizeof(struct inotify_event) + event->len;
         }

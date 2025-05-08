@@ -280,16 +280,13 @@ if (full_path.find("/etc/") == 0) {
         continue;
     }
 }
-            // // Вывод события
-            // std::cout << "[" << timestamp << "] "
-            //           << "[" << mac_address << "] "
-            //           << "[" << event_type << "] "
-            //           << "[" << user << "] "
-            //           << "[" << full_path << "]"
-            //           << std::endl;
-
-            write_log("","",event_name,event_type,user,full_path);
-
+            // write_log("","",event_name,event_type,user,full_path);
+            std::cout << LogEntry {
+                .event_name = event_name,
+                .event_type = event_type,
+                .username=user,
+                .details = full_path
+                };
             i += sizeof(struct inotify_event) + event->len;
         }
     }

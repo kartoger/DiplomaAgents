@@ -1,44 +1,53 @@
-#include <chrono>
-#include <ctime>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <cstring>
-#include <unistd.h>
-#include <ifaddrs.h>
-#include <filesystem>
-#include <fstream>
-// #include <libud/libudev.h> // sudo apt install libudev-dev
-#include <sys/inotify.h>
-#include "For_SSH_GDM/For_SSH_GDM.h"
+
+#include "For_FileSystem/FileMonitoring.h"
 #include "For_USB/For_USB.h"
 #include "For_all.h"
+#include <iostream>
+#include "For_SSH_GDM/For_SSH_GDM.h"
 #include "For_ScanUsers/For_ScanUsers.h"
-#include <magic.h> // sudo apt install libmagic-dev
-#include "For_FileSystem/FileMonitoring.h"
-
-
-
-
 
 // --- main() теперь сводится только к двум вызовам ---
 int main() {
     // 1) Вывести стартовое сообщение
 
     // write_log("","","app","Start","","Monitoring USB block devices");
-    // monitorUsbDevices();
-    // write_log("","","app","Start","","Monitoring mount/unmount via audit");
+    // std::cout << LogEntry{
+    //     .event_name = "app",
+    //     .event_type = "Start",
+    //     .details = "Monitoring USB block devices"
+    //     };
+
+
+    //  monitorUsbDevices();
+    // // write_log("","","app","Start","","Monitoring mount/unmount via audit");
+    // std::cout << LogEntry{
+    //     .event_name = "app",
+    //     .event_type = "Start",
+    //     .details = "Monitoring mount/unmount via audit"
+    //     };
     // monitorAuditMount();
     // 2) Запустить мониторинг
 
 
     // write_log("","","app","Start","","Monitoring SSH GDM access");
+    // std::cout << LogEntry{
+    //     .event_name = "app",
+    //     .event_type = "Start",
+    //     .details = "Monitoring SSH GDM access"
+    //     };
     // ssh_gdm_monitoring();
 
 
     // write_log("","","app","Start","","Monitoring Active Terminals");
     // get_active_terminals_logs();
 
-    FileMonitoring();
+    std::cout << LogEntry{
+        .event_name = "app",
+        .event_type = "Start",
+        .details = "Monitoring Active Terminals"
+        };
+    get_active_terminals_logs();
+
+    // FileMonitoring();
     return 0;
 }

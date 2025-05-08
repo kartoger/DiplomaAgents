@@ -61,7 +61,12 @@ void scanForExecutables(const std::string& path) {
     for (const auto& entry : fs::recursive_directory_iterator(path, fs::directory_options::skip_permission_denied)) {
         if (fs::is_regular_file(entry.path())) {
             if (isExecutableFile(entry.path())) {
-                 write_log("","","device","ExecutableFound", "",entry.path().string());
+                 // write_log("","","device","ExecutableFound", "",entry.path().string());
+                std::cout << LogEntry {
+                    .event_name = "device",
+                    .event_type = "ExecutableFound",
+                    .details = entry.path().string()
+                    };
 
             }
         }
@@ -178,7 +183,13 @@ void monitorAuditMount() {
 
 
                             if (!mountSource.empty() && !mountTarget.empty()) {
-                                write_log("","",eventName,action,"", "Source:" + mountSource + " " + "Target:"+mountTarget);
+                                // write_log("","",eventName,action,"", "Source:" + mountSource + " " + "Target:"+mountTarget);
+
+                                std::cout << LogEntry {
+                                    .event_name = eventName,
+                                    .event_type = action,
+                                    .details = "Source:" + mountSource + " " + "Target:"+ mountTarget
+                                    };
                                 waitingForPath = false;
                                 currentEventId.clear();
                                 scanForExecutables(mountTarget);
@@ -187,7 +198,12 @@ void monitorAuditMount() {
                             }
                         } else if (action == "Unmounted") {
                             // write_log(action, "From:"+devPath);
-                            write_log("","",eventName,action,"", "From:"+devPath);
+                            // write_log("","",eventName,action,"", "From:"+devPath);
+                            std::cout << LogEntry {
+                                .event_name = eventName,
+                                .event_type = action,
+                                .details = "From:"+devPath
+                                };
                             waitingForPath = false;
                             currentEventId.clear();
                         }
@@ -235,7 +251,12 @@ void handleDeviceEvent(struct udev_device* dev) {
     }
     std::string final_log = event + typevent;
     // write_log(final_log, details.str());
-    write_log("","",event,typevent,"",details.str());
+    // write_log("","",event,typevent,"",details.str());
+    std::cout << LogEntry {
+        .event_name = event,
+        .event_type = typevent,
+        .details = details.str()
+        };
 }
 
 // Функция-монитор: инициализирует udev, вешает фильтр, входит в бесконечный цикл,

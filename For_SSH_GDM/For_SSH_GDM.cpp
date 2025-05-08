@@ -8,60 +8,15 @@
 #include <ifaddrs.h>
 #include <filesystem>
 #include <fstream>
-
+#include "For_all.h"
 
 #include <magic.h> // sudo apt install libmagic-dev
 // Фильтрация событий
 std::string global_typename = "none";
-std::string getTimestamp1() {
-    auto now = std::chrono::system_clock::now();
-    std::time_t t = std::chrono::system_clock::to_time_t(now);
-    std::ostringstream ss;
-    ss << std::put_time(std::gmtime(&t), "%FT%TZ");
-    return ss.str();
-}
-
-// Чтение MAC-адреса из sysfs
-std::string getMacAddress2() {
-    std::ifstream file("/sys/class/net/enp3s0/address");
-    std::string mac;
-    if (file.is_open()) {
-        std::getline(file, mac);
-    } else {
-        mac = "00:00:00:00:00:00";
-    }
-    return mac;
-}
-void write_log_gsa(std::string timestamp = "none",
-                  std::string mac = "none",
-                  std::string event_name = "none" ,
-                  std::string event_type = "none",
-                  std::string username = "",
-                  std::string details = "none") {
-    if (timestamp == "") {
-        timestamp = getTimestamp1();
-    }
-    if (mac == "") {
-        mac = getMacAddress2();
-    }
-    if (username == "") {
-        username = getlogin();
-    }
-    std::cout << "[" << timestamp    << "] "
-              << "[" << mac   << "] "
-              << "[" << event_name << "::" << event_type    << "] "
-              << "[" << username << "] "
-              << "[" << details           << "]\n";
 
 
 
-    // const char* user = getlogin();
-    // std::cout << "[" << timestamp    << "] "
-    //           << "[" << mac   << "] "
-    //           << "[" << event_name         << "] "
-    //           << "[" << (user? user:"unknown") << "] "
-    //           << "[" << details           << "]\n";
-}
+
 bool filter_event(const std::string& line) {
     if (line.find("\"SYSLOG_IDENTIFIER\":\"gdm-password]\"") != std::string::npos &&
         (line.find("pam_unix(gdm-password:session)") != std::string::npos ||
@@ -201,21 +156,32 @@ void handle_sshd_event(const std::string& line) {
     std::string event_type = determine_sshd_event_type(message);
     std::string username = extract_sshd_username(message, event_type);
     std::string details = extract_sshd_details(message);
-    std::string timestamp = extract_time(line);
+    std::string timestamp = format_timestamp(extract_time(line));
 
+    std::cout << LogEntry {
+        .timestamp = timestamp,
+        .event_name = "sshd",
+        .event_type = event_type,
+        .username = username,
+        .details = details
+    };
 
-    // print_event(timestamp, "sshd", event_type, username, details);
 }
 void handle_gdm_event(const std::string& line) {
     std::string message = extract_message(line);
     std::string event_type = determine_gdm_event_type(message);
     std::string username = extract_gdm_username(message, event_type);
     std::string details = "local GUI login";
-    std::string timestamp = extract_time(line);
+    std::string timestamp = format_timestamp(extract_time(line));
 
-    write_log_gsa(timestamp,"", "gdm-password", event_type, username, details);
+        std::cout << LogEntry {
+        .timestamp = timestamp,
+        .event_name = "gdm-password",
+        .event_type = event_type,
+        .username = username,
+        .details = details
+    };
 
-    // print_event(timestamp, "gdm-password", event_type, username, details);
 }
 // === Главный обработчик событий ===
 void handle_event(const std::string& line) {

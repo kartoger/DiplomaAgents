@@ -49,7 +49,8 @@ void get_active_terminals_logs() {
             details << ", LoginTime: " << login_time;
 
 
-            write_log("","","system","Acitve_Terminals",entry->ut_user, details.str() );
+            // write_log("","","system","Acitve_Terminals",entry->ut_user, details.str() );
+            std::cout << LogEntry { .event_name = "system", .event_type = "Active Terminals",.username = entry->ut_user,.details=details.str()};
             logs.push_back(log.str());
         }
     }
