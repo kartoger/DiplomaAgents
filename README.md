@@ -1,3 +1,4 @@
+Логи
 [2025-05-08T13:12:15Z] [78:91:04:FA:22:11] [file::create] [john] [/home/john/Documents/report.txt]
 [2025-05-08T13:12:17Z] [78:91:04:FA:22:11] [file::modify] [john] [/home/john/Documents/report.txt]
 [2025-05-08T13:13:02Z] [78:91:04:FA:22:11] [file::delete] [john] [/home/john/Documents/report.txt]
@@ -10,6 +11,7 @@
 [2025-05-08T13:19:42Z] [78:91:04:FA:22:11] [file::create] [john] [/home/john/.bashrc]
 
 
+Структура
 Формат лога: [timestamp] [MAC] [event_type] [user] [path]
 Тип события: file::create, file::modify, file::delete
 [timestamp] - Временная метка события.
