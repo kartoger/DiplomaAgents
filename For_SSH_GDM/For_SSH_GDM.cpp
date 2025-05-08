@@ -8,8 +8,7 @@
 #include <ifaddrs.h>
 #include <filesystem>
 #include <fstream>
-#include <libud/libudev.h> // sudo apt install libudev-dev
-#include <sys/inotify.h>
+
 
 #include <magic.h> // sudo apt install libmagic-dev
 // Фильтрация событий
