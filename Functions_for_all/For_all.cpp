@@ -14,7 +14,22 @@ std::string getTimestamp() {
     ss << std::put_time(std::gmtime(&t), "%FT%TZ");
     return ss.str();
 }
+std::string convertTimestampToISO8601(const std::string& timestampStr) {
+    // Разделяем на секунды и миллисекунды
+    size_t dotPos = timestampStr.find('.');
 
+    std::string secondsPart = timestampStr.substr(0, dotPos);
+    // Преобразуем строку в целое число
+    std::time_t seconds = std::stoll(secondsPart);
+
+    // Преобразуем в UTC
+    std::tm* gmtimePtr = std::gmtime(&seconds);
+
+    // Форматируем как ISO 8601
+    std::ostringstream oss;
+    oss << std::put_time(gmtimePtr, "%Y-%m-%dT%H:%M:%SZ");
+    return oss.str();
+}
 // Реализация getMacAddress()
 std::string getMacAddress() {
     std::ifstream file("/sys/class/net/enp3s0/address");

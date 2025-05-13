@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <netpacket/packet.h>
 #include <fstream>
-#include <libudev.h> // sudo apt install libudev-dev
+#include <libud/libudev.h> // sudo apt install libudev-dev
 #include <sys/inotify.h>
 #include <magic.h> // sudo apt install libmagic-dev
 namespace fs = std::filesystem;

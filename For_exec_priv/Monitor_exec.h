@@ -11,6 +11,6 @@ class Monitor_exec {
 
 };
 
-
+int monitor_exec();
 
 #endif //MONITOR_EXEC_H

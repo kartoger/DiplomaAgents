@@ -5,7 +5,7 @@
 #include <iostream>
 #include "For_SSH_GDM/For_SSH_GDM.h"
 #include "For_ScanUsers/For_ScanUsers.h"
-
+#include "For_exec_priv/Monitor_exec.h"
 // --- main() теперь сводится только к двум вызовам ---
 int main() {
     // 1) Вывести стартовое сообщение
@@ -40,14 +40,15 @@ int main() {
 
     // write_log("","","app","Start","","Monitoring Active Terminals");
     // get_active_terminals_logs();
-
+    std::cout << "FSADDSDSDSDS";
     std::cout << LogEntry{
         .event_name = "app",
         .event_type = "Start",
         .details = "Monitoring Active Terminals"
         };
-    get_active_terminals_logs();
+    // get_active_terminals_logs();
 
     // FileMonitoring();
+    monitor_exec();
     return 0;
 }
