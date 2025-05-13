@@ -103,18 +103,20 @@ struct ExecEventGroup {
 
 };
 int monitor_exec() {
+    int audit_fd = init_audit_socket();
+    if (audit_fd < 0) return 1;
 
-    int audit_fd = audit_open();
-
-
-    if (audit_set_pid(audit_fd, getpid(), WAIT_YES) <= 0) {
-        std::cerr << "Не удалось зарегистрироваться как audit-демон\n";
-        return 1;
-    }
-    if (audit_fd < 0) {
-        std::cerr << "Не удалось подключиться к audit-сокету\n";
-        return 1;
-    }
+    // int audit_fd = audit_open();
+    //
+    //
+    // if (audit_set_pid(audit_fd, getpid(), WAIT_YES) <= 0) {
+    //     std::cerr << "Не удалось зарегистрироваться как audit-демон\n";
+    //     return 1;
+    // }
+    // if (audit_fd < 0) {
+    //     std::cerr << "Не удалось подключиться к audit-сокету\n";
+    //     return 1;
+    // }
 
     std::cout << "Ожидание событий с ключом [exec_priv]...\n";
 
@@ -192,6 +194,6 @@ int monitor_exec() {
         }
     }
 
-    close(audit_fd);
+
     return 0;
 }

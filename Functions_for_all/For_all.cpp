@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <sstream>
 #include <unistd.h>
+#include <libaudit.h>
 // Реализация getTimestamp()
 std::string getTimestamp() {
     auto now = std::chrono::system_clock::now();
@@ -13,6 +14,22 @@ std::string getTimestamp() {
     std::ostringstream ss;
     ss << std::put_time(std::gmtime(&t), "%FT%TZ");
     return ss.str();
+}
+int init_audit_socket() {
+    int audit_fd = audit_open();
+    if (audit_fd < 0) {
+        std::cerr << "❌ Не удалось открыть audit-сокет\n";
+        return -1;
+    }
+
+    if (audit_set_pid(audit_fd, getpid(), WAIT_YES) <= 0) {
+        std::cerr << "❌ Не удалось зарегистрироваться как audit-демон\n";
+        close(audit_fd);
+        return -1;
+    }
+
+    std::cout << "✅ Успешно подключен к audit-сокету\n";
+    return audit_fd;
 }
 std::string convertTimestampToISO8601(const std::string& timestampStr) {
     // Разделяем на секунды и миллисекунды
@@ -54,23 +71,3 @@ std::ostream& operator<<(std::ostream& os, const LogEntry& e) {
         << "[" << e.details      << "]" << std::endl;
 }
 
-// Реализация write_log (без default-аргументов здесь!)
-// void write_log(std::string timestamp,
-//                std::string mac,
-//                std::string event_name,
-//                std::string event_type,
-//                std::string username,
-//                std::string details)
-// {
-//     if (timestamp.empty())   timestamp = getTimestamp();
-//     if (mac.empty())         mac       = getMacAddress();
-//     if (username.empty())    username  = getlogin();
-//
-//     std::cout
-//       << "[" << timestamp     << "] "
-//       << "[" << mac           << "] "
-//       << "[" << event_name
-//       <<  "::" << event_type  << "] "
-//       << "[" << username      << "] "
-//       << "[" << details       << "]\n";
-// }

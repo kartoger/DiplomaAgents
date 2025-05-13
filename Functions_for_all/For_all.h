@@ -9,7 +9,7 @@ std::string getTimestamp();
 
 // Прочитать MAC-адрес из /sys/class/net/... или вернуть 00:...
 std::string getMacAddress();
-
+int init_audit_socket();
 std::string convertTimestampToISO8601(const std::string& timestampStr);
 // Сам LogEntry — только объявление
 struct LogEntry {
