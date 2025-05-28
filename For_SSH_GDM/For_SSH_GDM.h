@@ -7,5 +7,5 @@
 
 
 
-void ssh_gdm_monitoring();
+LogEntry ssh_gdm_monitoring();
 #endif //FOR_SSH_GDM_H

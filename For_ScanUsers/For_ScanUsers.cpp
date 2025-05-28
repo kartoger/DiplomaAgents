@@ -21,7 +21,7 @@ std::string format_login_time(time_t raw_time) {
 // Получение всех активных пользователей и форматирование логов
 void get_active_terminals_logs() {
     std::vector<std::string> logs;
-
+    std::cout << "Scanning terminals..." << std::endl;
     setutent();
     struct utmp *entry;
 
@@ -50,7 +50,14 @@ void get_active_terminals_logs() {
 
 
             // write_log("","","system","Acitve_Terminals",entry->ut_user, details.str() );
-            std::cout << LogEntry { .event_name = "system", .event_type = "Active Terminals",.username = entry->ut_user,.details=details.str()};
+            // std::cout << LogEntry { .event_name = "system", .event_type = "Active Terminals",.username = entry->ut_user,.details=details.str()};
+
+            write_log_entry({ .event_name = "system",
+                .event_type = "Active Terminals",
+                .username = entry->ut_user,
+                .details=details.str()}
+
+);
             logs.push_back(log.str());
         }
     }

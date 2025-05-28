@@ -15,7 +15,8 @@ target_include_directories(functions_for_all PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/Functions_for_all
 )
 
-add_executable(main main.cpp
+add_executable(main
+        main.cpp
         For_SSH_GDM/For_SSH_GDM.cpp
         Functions_for_all/For_all.cpp
         For_USB/For_USB.cpp
@@ -29,7 +30,14 @@ add_executable(main main.cpp
 target_include_directories(main PRIVATE
         ${LIBUDEV_INCLUDE_DIRS}
         ${LIBMAGIC_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Functions_for_all
+        ${CMAKE_CURRENT_SOURCE_DIR}/For_USB
+        ${CMAKE_CURRENT_SOURCE_DIR}/For_SSH_GDM
+        ${CMAKE_CURRENT_SOURCE_DIR}/For_ScanUsers
+        ${CMAKE_CURRENT_SOURCE_DIR}/For_FileSystem
+        ${CMAKE_CURRENT_SOURCE_DIR}/For_exec_priv
 )
+
 
 # Прокидываем дополнительные флаги компилятора (если pkg-config их выдаёт)
 target_compile_options(main PRIVATE

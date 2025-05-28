@@ -10,20 +10,17 @@
 #include <magic.h> // sudo apt install libmagic-dev
 #include <sys/inotify.h>
 #include "For_USB.h"
+
+#include <libaudit.h>
+#include <set>
+#include <unordered_map>
 // -a always,exit -F arch=b64 -S mount -S umount -k mount_events
 // Получение метки времени в формате ISO8601
 
 
 namespace fs = std::filesystem;
 
-std::string extractValue(const std::string& str, const std::string& start, const std::string& end) {
-    size_t p = str.find(start);
-    if (p == std::string::npos) return "";
-    p += start.size();
-    size_t q = str.find(end, p);
-    if (q == std::string::npos) return "";
-    return str.substr(p, q-p);
-}
+
 
 bool isExecutableFile(const fs::path& filePath) {
     // 1. Проверка прав на исполнение
@@ -72,150 +69,148 @@ void scanForExecutables(const std::string& path) {
         }
     }
 }
-// Основная функция-монитор: следит за /var/log/audit/audit.log через inotify,
-// парсит только записи с key="mount_events" и выводит device::Mounted/Unmounted
-void monitorAuditMount() {
-    const std::string AUDIT_LOG   = "/var/log/audit/audit.log";
-    std::string mountSource;
-    std::string mountTarget;
-    int in_fd = inotify_init();
-    if (in_fd < 0) {
-        perror("inotify_init");
-        return;
+
+struct AuditEvent {
+    std::string event_id;
+    std::string syscall_type; // "Mounted" / "Unmounted"
+    std::string username;
+    std::string comm;
+    std::string exe;
+    std::string cwd;
+    std::string dev_path;
+    std::string mount_point;
+    std::string timestamp;
+
+    std::chrono::steady_clock::time_point created_at = std::chrono::steady_clock::now();
+
+    bool isReady() const {
+        return !syscall_type.empty()
+            && !event_id.empty()
+            && !comm.empty()
+            && !exe.empty()
+            && !username.empty()
+            // && !dev_path.empty()
+            // && !timestamp.empty()
+            && !mount_point.empty()
+            && (!dev_path.empty() || syscall_type == "Unmounted");
     }
+};
+std::set<std::string> allowed_execs = {
+    "/usr/bin/mount",
+    "/usr/bin/umount",
+    "/usr/libexec/udisks2/udisksd",
+    "/usr/bin/ntfs-3g"
+};
+void monitorAuditMountQueu() {
+    std::unordered_map<std::string, AuditEvent> buffer;
 
-    int wd = inotify_add_watch(in_fd, AUDIT_LOG.c_str(), IN_MODIFY);
-    if (wd < 0) {
-        perror("inotify_add_watch");
-        close(in_fd);
-        return;
-    }
 
-    std::ifstream auditFile(AUDIT_LOG);
-    if (!auditFile.is_open()) {
-        std::cerr << "Cannot open " << AUDIT_LOG << "\n";
-        close(in_fd);
-        return;
-    }
-
-    auditFile.seekg(0, std::ios::end);
-    char buf[4096];
-
-    std::string currentEventId;
-    std::string action;
-    std::string eventName = "device";
-    bool waitingForPath = false;
+    std::cout << LogEntry{
+        .event_name = "app",
+        .event_type = "Start",
+        .details = "Monitoring mount/unmount via audit"
+        };
 
     while (true) {
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(in_fd, &fds);
-
-        if (select(in_fd+1, &fds, nullptr, nullptr, nullptr) > 0) {
-            read(in_fd, buf, sizeof(buf)); // сброс уведомления inotify
-            // std::cout << "inotify triggered\n";
-
-            auditFile.clear(); // сброс EOF
-            std::string line;
-
-            while (std::getline(auditFile, line)) {
-                // Отладка: покажем все строки
-                // std::cout << "[debug] LINE: " << line << "\n";
-
-
-
-// std::string syscallRaw = extractValue(line, "syscall=", " ");
-//                 int syscallNum = -1;
-//                 try {
-//                     syscallNum = std::stoi(syscallRaw);
-//                 } catch (const std::invalid_argument&) {
-//                     std::cerr << "[debug] Could not parse syscall from line: " << line << "\n";
-//                     continue;
-//                 }
-
-//
-// if (syscallNum == 165) {
-//     action = "device::Mounted";
-// } else if (syscallNum == 166) {
-//     action = "device::Unmounted";
-// }
-                // bool isMount = (syscallNum == 165);
-                // bool isUmount = (syscallNum == 166);
+        AuditMessage msg = queue_mount.wait_and_pop();
 
 
 
 
-                // Ищем строку SYSCALL с mount или umount
-                bool isMount = (line.find("type=SYSCALL") != std::string::npos &&
-                                (line.find("comm=\"mount") != std::string::npos) || ((line.find("comm=\"pool-udisksd") != std::string::npos) && (line.find("syscall=165") != std::string::npos)));
-                bool isUmount = (line.find("type=SYSCALL") != std::string::npos &&
-                                 (line.find("comm=\"umount") != std::string::npos) || ((line.find("comm=\"pool-udisksd") != std::string::npos) && (line.find("syscall=166") != std::string::npos)));
-                if (isMount || isUmount) {
-                    std::string header = extractValue(line, "audit(", ")");
-                    if (header.empty()) continue;
-                     // std::cout << "[debug] LINE: " << line << "\n";
-                    auto pos = header.find(':');
-                    if (pos == std::string::npos) continue;
+        // ПРИШЛА СТРОКА
+        std::string id = extract_event_id(msg.message);
+        // Создаётся/достаётся запись с этим event_id
+        // std::cout << id;
+        AuditEvent& ev = buffer[id];
 
-                    currentEventId = header.substr(pos + 1);
-                    action = (isMount ? "Mounted" : "Unmounted");
-                    waitingForPath = true;
-                    // std::cout << "[debug] SYSCALL MATCH: " << action << ", eventId=" << currentEventId << "\n";
-                    continue;
-                }
+        if (msg.type == AUDIT_SYSCALL && !id.empty()) {
 
-                // Если ждём PATH-сообщение с тем же event_id
-                if (waitingForPath &&
-                    line.find("type=PATH") != std::string::npos &&
-                    line.find(currentEventId) != std::string::npos) {
-
-                    std::string devPath = extractValue(line, "name=\"", "\"");
-                     // std::cout << devPath << " **********\n";
-                    // std::cout << action << "\n";
-
-                    if (!devPath.empty()) {
-                        if (action == "Mounted") {
-                            if (devPath.find("/dev/") == 0) {
-                                mountSource = devPath;
-                            } else {
-                                mountTarget = devPath;
-                            }
-
-
-                            if (!mountSource.empty() && !mountTarget.empty()) {
-                                // write_log("","",eventName,action,"", "Source:" + mountSource + " " + "Target:"+mountTarget);
-
-                                std::cout << LogEntry {
-                                    .event_name = eventName,
-                                    .event_type = action,
-                                    .details = "Source:" + mountSource + " " + "Target:"+ mountTarget
-                                    };
-                                waitingForPath = false;
-                                currentEventId.clear();
-                                scanForExecutables(mountTarget);
-                                mountSource.clear();
-                                mountTarget.clear();
-                            }
-                        } else if (action == "Unmounted") {
-                            // write_log(action, "From:"+devPath);
-                            // write_log("","",eventName,action,"", "From:"+devPath);
-                            std::cout << LogEntry {
-                                .event_name = eventName,
-                                .event_type = action,
-                                .details = "From:"+devPath
-                                };
-                            waitingForPath = false;
-                            currentEventId.clear();
-                        }
-                    }
-                }
+            if (ev.timestamp.empty()) {
+                ev.timestamp = extract_audit_timestamp(msg.message);
             }
+            if (msg.message.find("syscall=165") != std::string::npos) {
+                // std::cout << id+"[debug] raw msg:\n" << msg.message << "\n";
+                ev.event_id = id;
+
+                ev.syscall_type = "Mounted";
+                ev.comm = extract_syscall_comm(msg.message);
+                ev.username = extract_syscall_username(msg.message);
+                ev.exe = extract_syscall_exe(msg.message);
+                            }
+            else if (msg.message.find("syscall=166") != std::string::npos) {
+                // std::cout << id+"[debug] raw msg:\n" << msg.message << "\n";
+                ev.event_id = id;
+                ev.syscall_type = "Unmounted";
+                ev.comm = extract_syscall_comm(msg.message);
+                ev.username = extract_syscall_username(msg.message);
+                ev.exe = extract_syscall_exe(msg.message);
+                            }
+
+        }
+        else if (msg.type == AUDIT_PATH && !id.empty()) {
+            if (ev.timestamp.empty()) {
+                ev.timestamp = extract_audit_timestamp(msg.message);
+            }
+            // std::cout << "[debug] PATH: " << msg << std::endl;
+            if (msg.message.find("item=0")!= std::string::npos) {
+                ev.mount_point = extract_path_path(msg.message);
+                // std::cout << id +"[debug] mount_point: " << ev.mount_point << std::endl;
+
+            }
+            else if (msg.message.find("item=1")!= std::string::npos) {
+                ev.dev_path = extract_path_path(msg.message);
+                // std::cout << id +"[debug] from: " << ev.dev_path << std::endl;
+
+            }
+        }
+        if (allowed_execs.find(ev.exe) == allowed_execs.end()) {
+            buffer.erase(id); // Неинтересный процесс
+            continue;
+        }
+        if (ev.isReady()) {
+            // Выводим
+            // std::cout << LogEntry{
+            //     .timestamp = ev.timestamp,
+            //     .event_name = "Device",
+            //     .event_type = ev.syscall_type,
+            //     .username = ev.username,
+            //     .details = (ev.syscall_type == "Mounted")
+            //         ? "Source:" + ev.dev_path + " Target:" + ev.mount_point + " Command:" + ev.comm
+            //         : "From:" + ev.mount_point + " Command:" + ev.comm
+            // };
+            write_log_entry({
+                .timestamp = ev.timestamp,
+                .event_name = "Device",
+                .event_type = ev.syscall_type,
+                .username = ev.username,
+                .details = (ev.syscall_type == "Mounted")
+                    ? "Source:" + ev.dev_path + " Target:" + ev.mount_point + " Command:" + ev.comm
+                    : "From:" + ev.mount_point + " Command:" + ev.comm
+            });
+            // std::cout << "[debug] Удаление по исполнению id=" << id << std::endl;
+
+            buffer.erase(id);
+
+        }
+        // Удаление устаревших событий
+        const auto now = std::chrono::steady_clock::now();
+        const auto ttl = std::chrono::seconds(7);
+
+        for (auto it = buffer.begin(); it != buffer.end(); ) {
+            if (now - it->second.created_at > ttl) {
+                // std::cout << "[debug] Удаление по TTL id=" << it->first << std::endl;
+                it = buffer.erase(it);
+            } else {
+                ++it;
+            }
+        }
         }
     }
 
-    inotify_rm_watch(in_fd, wd);
-    close(in_fd);
-}
+
+
+
+
 void handleDeviceEvent(struct udev_device* dev) {
     const char* action = udev_device_get_action(dev);
     std::string event = "device";
@@ -232,8 +227,7 @@ void handleDeviceEvent(struct udev_device* dev) {
     const char* pid     = udev_device_get_sysattr_value(usb_dev, "idProduct");
 
 
-    // if (!action || std::strcmp(action, "add") != 0)
-    //     return;
+
     if (action && std::strcmp(action, "add")==0) {
         // обработать включение
         typevent = "Add_USB";
@@ -250,13 +244,11 @@ void handleDeviceEvent(struct udev_device* dev) {
         details << " (VID:PID=" << vid << ":" << pid << ")";
     }
     std::string final_log = event + typevent;
-    // write_log(final_log, details.str());
-    // write_log("","",event,typevent,"",details.str());
-    std::cout << LogEntry {
-        .event_name = event,
+
+
+    write_log_entry({.event_name = event,
         .event_type = typevent,
-        .details = details.str()
-        };
+        .details = details.str()});
 }
 
 // Функция-монитор: инициализирует udev, вешает фильтр, входит в бесконечный цикл,

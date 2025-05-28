@@ -11,6 +11,6 @@ class Monitor_exec {
 
 };
 
-int monitor_exec();
+void monitor_exec_from_queu();
 
 #endif //MONITOR_EXEC_H

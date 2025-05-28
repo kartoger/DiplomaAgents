@@ -151,14 +151,14 @@ std::string extract_sshd_details(const std::string& message) {
     }
     return "unknown SSH login";
 }
-void handle_sshd_event(const std::string& line) {
+LogEntry handle_sshd_event(const std::string& line) {
     std::string message = extract_message(line);
     std::string event_type = determine_sshd_event_type(message);
     std::string username = extract_sshd_username(message, event_type);
     std::string details = extract_sshd_details(message);
     std::string timestamp = format_timestamp(extract_time(line));
 
-    std::cout << LogEntry {
+    return  LogEntry {
         .timestamp = timestamp,
         .event_name = "sshd",
         .event_type = event_type,
@@ -167,14 +167,14 @@ void handle_sshd_event(const std::string& line) {
     };
 
 }
-void handle_gdm_event(const std::string& line) {
+LogEntry handle_gdm_event(const std::string& line) {
     std::string message = extract_message(line);
     std::string event_type = determine_gdm_event_type(message);
     std::string username = extract_gdm_username(message, event_type);
     std::string details = "local GUI login";
     std::string timestamp = format_timestamp(extract_time(line));
 
-        std::cout << LogEntry {
+        return LogEntry {
         .timestamp = timestamp,
         .event_name = "gdm-password",
         .event_type = event_type,
@@ -184,19 +184,20 @@ void handle_gdm_event(const std::string& line) {
 
 }
 // === Главный обработчик событий ===
-void handle_event(const std::string& line) {
+LogEntry handle_event(const std::string& line) {
 
 
     // ДЛЯ DEBUG
     // std::cout << "[MATCH] " << line << std::endl;
     // std::cout << std::string(20, '*') << std::endl;
     if (global_typename == "gdm-password") {
-        handle_gdm_event(line);
+        return handle_gdm_event(line);
     } else if (global_typename == "sshd") {
-        handle_sshd_event(line);
+        return handle_sshd_event(line);
     } else {
         std::cerr << "[ERROR] Неизвестный источник события!\n";
     }
+    return {};
 }
 
 // === Чтение событий из journalctl ===
@@ -204,16 +205,21 @@ void ssh_gdm_monitoring() {
     FILE* pipe = popen("/bin/sh -c '/usr/bin/journalctl -f -o json'", "r");
     if (!pipe) {
         std::cerr << "[ERROR] Не удалось открыть поток journalctl" << std::endl;
-        return;
     }
 
-    char buffer[4096];
-    // std::cout << "[INFO] Стартing чтения событий journalctl...\n";
 
+    char buffer[4096];
+    std::cout << "[INFO] Стартing чтения событий journalctl...\n";
+    std::cout << LogEntry{
+        .event_name = "app",
+        .event_type = "Start",
+        .details = "Monitoring ssh-gdm via journalctl"
+        };
     while (fgets(buffer, sizeof(buffer), pipe)) {
         std::string line(buffer);
         if (filter_event(line)) {
-            handle_event(line);
+            write_log_entry(handle_event(line));
+
         }
     }
     pclose(pipe);
