@@ -13,7 +13,13 @@
 [2025-05-08T13:18:20Z] [78:91:04:FA:22:11] [file::modify] [kartoger] [/etc/ssh/sshd_config]
 [2025-05-08T13:19:42Z] [78:91:04:FA:22:11] [file::create] [john] [/home/john/.bashrc]
 ```
-
+## Вывод в отчет''
+```
+Формат лога: [timestamp] [MAC] [event_type] [user] [path]
+[2025-05-08T13:15:48Z] [78:91:04:FA:22:11] [file::modify] [root] [/etc/shadow]
+[2025-05-08T11:03:21Z] [78:91:04:FA:22:11] [gdm-password::Success] [kartoger] [local GUI login]
+[2025-05-08T14:07:45Z] [34:17:eb:ba:01:af] [device::ExecutableFound] [user123] [/media/user123/USB_DRIVE/runme.sh]
+```
 ## Структура
 ```
 Формат лога: [timestamp] [MAC] [event_type] [user] [path]
