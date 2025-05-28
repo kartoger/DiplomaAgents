@@ -15,7 +15,7 @@
 ```
 ## Вывод в отчет''
 ```
-Log Format: [timestamp] [MAC] [event_name::event_type] [user] [path]
+Log Format: [timestamp] [MAC] [event_name::event_type] [user] [details]
 [2025-05-08T13:15:48Z] [78:91:04:FA:22:11] [file::modify] [root] [/etc/shadow]
 [2025-05-08T11:03:21Z] [78:91:04:FA:22:11] [gdm-password::Success] [kartoger] [local GUI login]
 ```
