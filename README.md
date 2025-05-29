@@ -15,9 +15,7 @@
 ```
 ## Вывод в отчет''
 ```
-Log Format: [timestamp] [MAC] [event_name::event_type] [user] [details]
-[2025-05-08T13:15:48Z] [78:91:04:FA:22:11] [file::modify] [root] [/etc/shadow]
-[2025-05-08T11:03:21Z] [78:91:04:FA:22:11] [gdm-password::Success] [kartoger] [local GUI login]
+
 ```
 ## Структура
 ```
@@ -74,6 +72,11 @@ file::Modify изменение файла.
 
 ## Логи 
 ```
+
+[2025-05-08T13:37:12Z] [78:91:04:FA:22:11] [device::Add_USB] [client] [/dev/sdb (VID:PID=0781:5583)]
+[2025-05-08T13:37:15Z] [78:91:04:FA:22:11] [device::Mounted] [client] [Source:/dev/sdb1 Target:/media/user/SANDISK]
+[2025-05-08T13:37:15Z] [78:91:04:FA:22:11] [device::ExecutableFound] [client] [/media/user/SANDISK/setup.sh]
+
 2025-05-08T14:20:01Z | MAC: | IP: | event: device | type: Add_USB | user: | details: /dev/sdb (VID:PID=0781:5583)
 2025-05-08T14:20:02Z | MAC: | IP: | event: device | type: Mounted | user: | details: Source:/dev/sdb1 Target:/media/user/SANDISK
 2025-05-08T14:20:03Z | MAC: | IP: | event: device | type: ExecutableFound | user: | details: /media/user/SANDISK/setup.sh
