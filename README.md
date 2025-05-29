@@ -76,6 +76,8 @@ file::Modify изменение файла.
 [2025-05-08T13:37:12Z] [78:91:04:FA:22:11] [device::Add_USB] [client] [/dev/sdb (VID:PID=0781:5583)]
 [2025-05-08T13:37:15Z] [78:91:04:FA:22:11] [device::Mounted] [client] [Source:/dev/sdb1 Target:/media/user/SANDISK]
 [2025-05-08T13:37:15Z] [78:91:04:FA:22:11] [device::ExecutableFound] [client] [/media/user/SANDISK/setup.sh]
+[2025-05-10T14:23:12Z] [00:11:22:33:44:55] [device::Unmounted] [client] [From:/media/usb Command:umount]
+[2025-05-10T14:23:12Z] [00:11:22:33:44:55] [device::Remove_USB] [client] [/dev/sdb (VID:PID=0781:5583)]
 
 2025-05-08T14:20:01Z | MAC: | IP: | event: device | type: Add_USB | user: | details: /dev/sdb (VID:PID=0781:5583)
 2025-05-08T14:20:02Z | MAC: | IP: | event: device | type: Mounted | user: | details: Source:/dev/sdb1 Target:/media/user/SANDISK
